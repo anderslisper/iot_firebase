@@ -1,0 +1,1 @@
+firebase functions:config:set gmail.email="username@gmail.com" gmail.password="PASSWORD" database.root="/users/userid/" admin.email="admin@example.com"

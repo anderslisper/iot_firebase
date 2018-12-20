@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth.uid === $uid || auth.uid === '<userid>'",
+        ".write": "auth.uid === $uid || auth.uid === '<userid>'"
+      }
+    }
+  }
+}

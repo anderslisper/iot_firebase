@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>IoT Portal</title>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/5.6.0/firebase-app.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/5.6.0/firebase-auth.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/5.6.0/firebase-database.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="firebase_google_login.js"></script>
+  </head>
+  <body>
+    <h2>IoT portal for device&nbsp;
+    <select id="deviceId" style="font-size:14pt" onchange="deviceIdChanged()"></select></h2>
+    <br>
+    <table><tr><th></th><th>DESIRED STATE</th><th>REPORTED STATE</th><th></th>
+    </tr><tr>
+    <td><b>Temperature set:</b></td>
+    <td><select id="d_tempSetPoint" style="width:204px">
+      <option value="10">LowHeat (10&deg;C)</option>
+      <option value="16">16&deg;C</option>
+      <option value="17">17&deg;C</option>
+      <option value="18">18&deg;C</option>
+      <option value="19">19&deg;C</option>
+      <option value="20">20&deg;C</option>
+      <option value="21">21&deg;C</option>
+      <option value="22">22&deg;C</option>
+      <option value="23">23&deg;C</option>
+      <option value="24">24&deg;C</option>
+      <option value="25">25&deg;C</option>
+    </select></td>
+    <td><input type='text' id='r_tempSetPoint' style="width:200px" placeholder="Reading..." readonly></td>
+    <td>&deg;C</td>
+    </tr><tr>
+    <td><b>Telemetry interval:</b></td>
+    <td><input type='text' id='d_telemetryInterval' style="width:200px" placeholder="Reading..."></td>
+    <td><input type='text' id='r_telemetryInterval' style="width:200px" placeholder="Reading..." readonly></td>
+    <td>seconds</td>
+    </tr><tr>
+    <td><b>Update time:</b></td>
+    <td><input type='text' id='d_updateTime' style="width:200px" placeholder="Reading..." readonly></td>
+    <td><input type='text' id='r_updateTime' style="width:200px" placeholder="Reading..." readonly></td>
+    <td></td>
+    </tr><tr>
+    <td></td>
+    <td><button type="button" style="width:204px" onclick="saveData()">Save New Desired State</button></td>
+    <td><button type="button" style="width:204px" onclick="loadDevices()">Refresh</button></td>
+    <td><select id="d_duration" onchange="updateTelemetry()">
+      <option value="24">24 hours</option>
+      <option value="48">2 days</option>
+      <option value="96">4 days</option>
+      <option value="168">1 week</option>
+      <option value="-1">All</option>
+    </select></td>
+    </tr>
+    </table>
+    
+    <hr>
+    <div id="curve_chart" style="width: 1200px; height: 500px"></div>
+    <hr>
+    <br>
+    <input type='text' id='newDeviceId' style="width:200px" placeholder="Enter device id [A..Z0..9_]..." pattern="[A-Za-z0-9_]+">
+    <input type='text' id='newDeviceName' style="width:200px" placeholder="Enter visible name...">
+    <input type='text' id='newLocation'   style="width:200px" placeholder="Enter location...">
+    <button type="button" style="width:204px" onclick="createDevice()">Create new Device</button>
+
+    <script>
+    // Global vars
+    // Firebase path
+    var gFirebaseDeviceRoot = gFirebaseRoot + "NO_DEVICE_ID_SET";
+    // Current device
+    var gDeviceName;
+    var gDeviceFullName; // '<deviceid> in <location>'
+    var gSelectedIndex = 0;
+    
+    // Load the Visualization API and the corechart package.
+    google.charts.load('current', {'packages':['corechart']});
+
+    // Set a callback to run when the Google Visualization API is loaded.
+    google.charts.setOnLoadCallback(loadDevices);
+
+    // Load device list from firebase
+    function loadDevices() {
+        var select = document.getElementById('deviceId');
+        while (select.options.length > 0) {                
+            select.remove(0);
+        }        
+        
+        firebase.database().ref(gFirebaseRoot).once('value', function(snapshot) {
+            snapshot.forEach(function(childSnapshot) {
+              var childKey = childSnapshot.key;
+              var opt = document.createElement('option');
+              opt.value = childKey;
+              opt.innerHTML = childKey;
+              try {
+                name = childSnapshot.val().name;
+                loc = childSnapshot.val().location;
+                if (loc != undefined) {
+                    opt.innerHTML = name + ' in ' + loc;
+                }
+              }
+              catch(err) {
+                console.log(err)
+              }
+              select.appendChild(opt);    
+            })
+            select.selectedIndex = gSelectedIndex;
+            deviceIdChanged();
+          });
+    }
+    
+    // Called when device has changed
+    function deviceIdChanged() {
+        var select = document.getElementById('deviceId');
+        gSelectedIndex  = select.selectedIndex;
+        gDeviceName     = select.options[gSelectedIndex].value;
+        gDeviceFullName = select.options[gSelectedIndex].innerHTML;
+        gFirebaseDeviceRoot = gFirebaseRoot + '/' + gDeviceName;
+        readData('desired');
+        readData('reported');
+        updateTelemetry();
+    }
+
+    // Read settings data from firebase and update input boxes for either bank='desired' or 'reported'
+    function readData(bank) {
+      var prefix = bank.charAt(0) + '_'; // DOM ids are prefixed by either 'd_' or 'r_'
+      var all = document.getElementsByTagName("*");
+      for (var i = 0; i < all.length; i++) {
+        if (all[i].id.startsWith(prefix) && all[i].tagName == "INPUT") {
+            all[i].value = "";
+        }
+      }
+      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/' + bank).once('value', function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+          try {
+            if (childSnapshot.key.endsWith("Time")) {
+                var d = new Date(childSnapshot.val());
+                document.getElementById(prefix + childSnapshot.key).value = d.toString().substring(0,25);
+            } else {
+                document.getElementById(prefix + childSnapshot.key).value = childSnapshot.val();
+            }
+          }
+          catch(err) {
+            console.log("No matching DOM object for key '" + childSnapshot.key + "'");
+          }
+        });
+      });
+    }
+
+    // Save settings data to firebase
+    function saveData() {
+      var f = document.getElementById('d_tempSetPoint');
+      var tempSetPointVal = f.options[f.selectedIndex].value;
+      var telemetryIntervalVal = document.getElementById('d_telemetryInterval').value;
+      var d = new Date();
+      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/desired').set({
+        tempSetPoint: parseFloat(tempSetPointVal), 
+        telemetryInterval: parseFloat(telemetryIntervalVal),
+        updateTime: d.toISOString()
+      });
+    }
+
+    // Create new device
+    function createDevice() {
+      var devId   = document.getElementById('newDeviceId').value;
+      var devName = document.getElementById('newDeviceName').value;
+      var loc     = document.getElementById('newLocation').value;
+      devId = devId.replace(/[^a-zA-Z0-9_]/g, ""); // Remove all funny chars
+      if (devId != '' && devName != '') {
+          var d = new Date();
+          firebase.database().ref(gFirebaseRoot + '/' + devId + '/device_twin/desired').set({
+            tempSetPoint: 21, 
+            telemetryInterval: 1200,
+            updateTime: d.toISOString()
+          });
+          firebase.database().ref(gFirebaseRoot + '/' + devId).update({
+            name: devName, 
+            location: loc
+          });
+          
+        document.getElementById('newDeviceId').value = "";
+        document.getElementById('newDeviceName').value = "";
+        document.getElementById('newLocation').value = "";
+        loadDevices();
+      }
+    }
+
+    // Load telemetry data for current device and show chart
+    function updateTelemetry() {
+        var f = document.getElementById('d_duration');
+        var duration = f.options[f.selectedIndex].value;
+        
+        var data = new google.visualization.DataTable();
+        data.addColumn('date',   'Time');
+        data.addColumn('number', 'Actual temp');
+        data.addColumn('number', 'Set temp');
+        data.addColumn('number', 'Outdoor temp');
+        data.addColumn('number', 'Vind (m/s)');
+
+        firebase.database().ref(gFirebaseDeviceRoot + '/telemetry').once('value', function(snapshot) {
+          snapshot.forEach(function(childSnapshot) {
+            var childData = childSnapshot.val();
+            var tempOutdoor = 0;
+            var tempCurrent = 0;
+            var tempSetPoint = 0;
+            var wind = 0;
+            try {
+                tempOutdoor = childData.outdoor.temp;
+            } catch(err) {
+                //console.log(err)
+            }
+            try {
+                wind = childData.outdoor.wind;
+            } catch(err) {
+                //console.log(err)
+            }
+            try {
+                tempCurrent = childData.tempCurrent;
+            } catch(err) {
+                //console.log(err)
+            }
+            try {
+                tempSetPoint = childData.tempSetPoint;
+            } catch(err) {
+                //console.log(err)
+            }
+            var logDate  = new Date(childData.utctime);
+            var youngest = new Date().getTime()-duration*60*60*1000;
+            if (duration < 0 || logDate.getTime() > youngest) {
+                data.addRow( [logDate, tempCurrent, tempSetPoint, tempOutdoor, wind] ); 
+            }
+          });
+          var options = {
+              title: gDeviceFullName,
+              curveType: 'none',
+              hAxis: {format: 'HH:mm\ndd MMM'},
+              legend: { position: 'bottom' }
+          };
+
+          var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+          chart.draw(data, options);
+        });
+    }
+    </script>
+  </body>
+</html>
