@@ -13,7 +13,7 @@
     <h2>IoT portal for device&nbsp;
     <select id="deviceId" style="font-size:14pt" onchange="deviceIdChanged()"></select></h2>
     <br>
-    <table><tr><th></th><th>DESIRED STATE</th><th>REPORTED STATE</th><th></th>
+    <table><tr><th></th><th>DESIRED STATE</th><th>REPORTED STATE</th><th></th><th style="width:40px"></th><th>LATEST READINGS</th>
     </tr><tr>
     <td><b>Temperature set:</b></td>
     <td><select id="d_tempSetPoint" style="width:204px">
@@ -31,16 +31,34 @@
     </select></td>
     <td><input type='text' id='r_tempSetPoint' style="width:200px" placeholder="Reading..." readonly></td>
     <td>&deg;C</td>
+    <td></td><td><input type='text' id='r_latestSetPoint' style="width:200px" readonly></td>
     </tr><tr>
     <td><b>Telemetry interval:</b></td>
     <td><input type='text' id='d_telemetryInterval' style="width:200px" placeholder="Reading..."></td>
     <td><input type='text' id='r_telemetryInterval' style="width:200px" placeholder="Reading..." readonly></td>
     <td>seconds</td>
+    <td></td><td><input type='text' id='r_latestTemp' style="width:200px" readonly></td>
+    </tr><tr>
+    <td><b>Fallback date:</b></td>
+    <td><input type='date' id='d_fallbackDate' style="width:200px" placeholder="Reading..."></td>
+    <td></td>
+    <td></td>
+    <td></td><td><input type='text' id='r_latestOutdoor' style="width:200px" readonly></td>
+    </tr><tr>
+    <td><b>Fallback temp:</b></td>
+    <td><select id="d_fallbackTemp" style="width:204px">
+      <option value="16">16&deg;C</option>
+      <option value="21">21&deg;C</option>
+    </select></td>
+    <td></td>
+    <td></td>
+    <td></td><td><input type='text' id='r_latestWind' style="width:200px" readonly></td>
     </tr><tr>
     <td><b>Update time:</b></td>
     <td><input type='text' id='d_updateTime' style="width:200px" placeholder="Reading..." readonly></td>
     <td><input type='text' id='r_updateTime' style="width:200px" placeholder="Reading..." readonly></td>
     <td></td>
+    <td></td><td><input type='text' id='r_latestTime' style="width:200px" readonly></td>
     </tr><tr>
     <td></td>
     <td><button type="button" style="width:204px" onclick="saveData()">Save New Desired State</button></td>
@@ -71,6 +89,7 @@
     // Current device
     var gDeviceName;
     var gDeviceFullName; // '<deviceid> in <location>'
+    var gDeviceParameter = getUrlVar('deviceid');
     var gSelectedIndex = 0;
     
     // Load the Visualization API and the corechart package.
@@ -78,6 +97,20 @@
 
     // Set a callback to run when the Google Visualization API is loaded.
     google.charts.setOnLoadCallback(loadDevices);
+
+    function getUrlVar(parameter) {
+        var vars = {};
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+            vars[key] = value;
+        });
+        var value = ''
+        try {
+            value = vars[parameter]
+        }
+        catch (err) {
+        }
+        return value;
+    }
 
     // Load device list from firebase
     function loadDevices() {
@@ -101,6 +134,10 @@
               }
               catch(err) {
                 console.log(err)
+              }
+              if (childKey == gDeviceParameter) {
+                gSelectedIndex = select.length;
+                gDeviceParameter = ''
               }
               select.appendChild(opt);    
             })
@@ -152,10 +189,14 @@
       var f = document.getElementById('d_tempSetPoint');
       var tempSetPointVal = f.options[f.selectedIndex].value;
       var telemetryIntervalVal = document.getElementById('d_telemetryInterval').value;
+      var fallbackDateVal = document.getElementById('d_fallbackDate').value;
+      var fallbackTempVal = document.getElementById('d_fallbackTemp').value;
       var d = new Date();
       firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/desired').set({
         tempSetPoint: parseFloat(tempSetPointVal), 
         telemetryInterval: parseFloat(telemetryIntervalVal),
+        fallbackDate: fallbackDateVal,
+        fallbackTemp: fallbackTempVal,
         updateTime: d.toISOString()
       });
     }
@@ -198,19 +239,25 @@
         data.addColumn('number', 'Vind (m/s)');
 
         firebase.database().ref(gFirebaseDeviceRoot + '/telemetry').once('value', function(snapshot) {
+          var tempOutdoor = 0;
+          var tempCurrent = 0;
+          var tempSetPoint = 0;
+          var wind = 0;
+          var logDate;
+          var youngest = new Date().getTime()-duration*60*60*1000;
           snapshot.forEach(function(childSnapshot) {
             var childData = childSnapshot.val();
-            var tempOutdoor = 0;
-            var tempCurrent = 0;
-            var tempSetPoint = 0;
-            var wind = 0;
+            tempOutdoor = 0;
+            tempCurrent = 0;
+            tempSetPoint = 0;
+            tempWind = 0;
             try {
                 tempOutdoor = childData.outdoor.temp;
             } catch(err) {
                 //console.log(err)
             }
             try {
-                wind = childData.outdoor.wind;
+                tempWind = childData.outdoor.wind;
             } catch(err) {
                 //console.log(err)
             }
@@ -224,10 +271,9 @@
             } catch(err) {
                 //console.log(err)
             }
-            var logDate  = new Date(childData.utctime);
-            var youngest = new Date().getTime()-duration*60*60*1000;
+            logDate  = new Date(childData.utctime);
             if (duration < 0 || logDate.getTime() > youngest) {
-                data.addRow( [logDate, tempCurrent, tempSetPoint, tempOutdoor, wind] ); 
+                data.addRow( [logDate, tempCurrent, tempSetPoint, tempOutdoor, tempWind] ); 
             }
           });
           var options = {
@@ -239,6 +285,12 @@
 
           var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
           chart.draw(data, options);
+          
+          document.getElementById("r_latestSetPoint").value = "Temp set point: " + tempSetPoint + "\xB0C";
+          document.getElementById("r_latestTemp").value = "Current temp: " + tempCurrent + "\xB0C";
+          document.getElementById("r_latestOutdoor").value = "Outdoor temp: " + tempOutdoor + "\xB0C";
+          document.getElementById("r_latestWind").value = "Wind: " + tempWind + " m/s";
+          document.getElementById("r_latestTime").value = logDate.toString().substring(0,25);
         });
     }
     </script>

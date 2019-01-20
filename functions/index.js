@@ -7,6 +7,7 @@ const nodemailer = require('nodemailer');
 
 const firebaseRoot  = functions.config().database.root;
 const adminEmail    = functions.config().admin.email;
+const alertEmail    = functions.config().tempalert.email;
 const gmailEmail    = functions.config().gmail.email;
 const gmailPassword = functions.config().gmail.password;
 const mailTransport = nodemailer.createTransport({
@@ -32,18 +33,29 @@ exports.sendEmail = functions.database.ref(firebaseRoot + '{deviceId}/device_twi
 //    }
 //  });
   console.log(val);
-  console.log('DeviceId: ' + deviceId); //+ ' with name:' + name);
-  
+
+  var mailTo = adminEmail
+  var subject = ""
+  if (val.tempAlert) {
+      if (alertEmail != "") {
+          mailTo += "," + alertEmail
+      }
+      subject = 'TEMP alert warning!!!';
+      console.log("Temperature alert from '" + deviceId + "' sent to " + mailTo); //+ ' with name:' + name);
+  }
+  else {
+      subject = 'Reported state update';
+      console.log("New state reported from '" + deviceId + "' sent to " + mailTo); //+ ' with name:' + name);
+  }
+
   const mailOptions = {
     from: '"Gundbyn IoT mailer" <' + gmailEmail + '>',
-    to: adminEmail,
-  };
-
-  // Building Email message.
-  mailOptions.subject = val.tempAlert ? 'TEMP alert warning!!!' : 'Reported state update';
-  mailOptions.text = "New state of device '" + deviceId + 
+    to: mailTo,
+    subject: subject,
+    text: "New state of device '" + deviceId + 
         "' is: \n" + JSON.stringify(val, null, 4) + 
-        "\n\nhttps://" + process.env.GCLOUD_PROJECT + ".firebaseapp.com/"
+        "\n\nhttps://" + process.env.GCLOUD_PROJECT + ".firebaseapp.com/?deviceid=" + deviceId
+  };
   
   try {
     await mailTransport.sendMail(mailOptions);
