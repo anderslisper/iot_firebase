@@ -13,10 +13,10 @@
     <h2>IoT portal for device&nbsp;
     <select id="deviceId" style="font-size:14pt" onchange="deviceIdChanged()"></select></h2>
     <br>
-    <table><tr><th></th><th>DESIRED STATE</th><th>REPORTED STATE</th><th></th><th style="width:20px"></th><th colspan="2">LATEST READINGS</th>
+    <table><tr align="left"><th></th><th>DESIRED STATE:</th><th>REPORTED:</th><th></th><th style="width:20px"></th><th colspan="2">LATEST READING:</th>
     </tr><tr>
     <td><b>Temperature set:</b></td>
-    <td><select id="d_tempSetPoint" style="width:184px">
+    <td><select id="d_tempSetPoint" style="width:144px">
       <option value="10">LowHeat (10&deg;C)</option>
       <option value="16">16&deg;C</option>
       <option value="17">17&deg;C</option>
@@ -29,40 +29,40 @@
       <option value="24">24&deg;C</option>
       <option value="25">25&deg;C</option>
     </select></td>
-    <td><input type='text' id='r_tempSetPoint' style="width:180px" placeholder="Reading..." readonly></td>
-    <td>&deg;C</td>
-    <td></td><td><b>Time:</b></td><td><input type='text' id='r_latestTime' style="width:70px" readonly></td>
+    <td><span id='r_tempSetPoint'>Reading...</span> &deg;C</td>
+    <td></td>
+    <td></td><td><b>Date:</b></td><td><input type='text' id='r_latestDay' style="width:70px" readonly></td>
     </tr><tr>
     <td><b>Telemetry interval:</b></td>
-    <td><input type='text' id='d_telemetryInterval' style="width:180px" placeholder="Reading..."></td>
-    <td><input type='text' id='r_telemetryInterval' style="width:180px" placeholder="Reading..." readonly></td>
-    <td>seconds</td>
-    <td></td><td><b>Set:</b></td><td><input type='text' id='r_latestSetPoint' style="width:70px" readonly></td>
+    <td><input type='text' id='d_telemetryInterval' style="width:140px" placeholder="Reading..."></td>
+    <td><span id='r_telemetryInterval'>Reading...</span> seconds</td>
+    <td></td>
+    <td></td><td><b>Time:</b></td><td><input type='text' id='r_latestTime' style="width:70px" readonly></td>
     </tr><tr>
     <td><b>Fallback date:</b></td>
-    <td><input type='date' id='d_fallbackDate' style="width:180px" placeholder="Reading..."></td>
+    <td><input type='date' id='d_fallbackDate' style="width:140px" placeholder="Reading..."></td>
     <td></td>
     <td></td>
-    <td></td><td><b>Current:</b></td><td><input type='text' id='r_latestTemp' style="width:70px" readonly></td>
+    <td></td><td style="color:red"><b>Set temp:</b></td><td><input type='text' id='r_latestSetPoint' style="width:70px" readonly></td>
     </tr><tr>
     <td><b>Fallback temp:</b></td>
-    <td><select id="d_fallbackTemp" style="width:184px">
+    <td><select id="d_fallbackTemp" style="width:144px">
       <option value="16">16&deg;C</option>
       <option value="21">21&deg;C</option>
     </select></td>
     <td></td>
     <td></td>
-    <td></td><td><b>Outdoor:</b></td><td><input type='text' id='r_latestOutdoor' style="width:70px" readonly></td>
+    <td></td><td style="color:blue"><b>Actual temp:</b></td><td><input type='text' id='r_latestTemp' style="width:70px" readonly></td>
     </tr><tr>
     <td><b>Update time:</b></td>
-    <td><input type='text' id='d_updateTime' style="width:180px" placeholder="Reading..." readonly></td>
-    <td><input type='text' id='r_updateTime' style="width:180px" placeholder="Reading..." readonly></td>
+    <td><span id='d_updateTime'>Reading...</span></td>
+    <td><span id='r_updateTime'>Reading...</span></td>
     <td></td>
-    <td></td><td><b>Wind:</b></td><td><input type='text' id='r_latestWind' style="width:70px" readonly></td>
-    </tr><tr>
+    <td></td><td style="color:orange"><b>Outdoor temp:</b></td><td><input type='text' id='r_latestOutdoor' style="width:70px" readonly></td>
+    </tr><tr valign="top">
     <td></td>
-    <td><button type="button" style="width:184px" onclick="saveData()">Save New Desired State</button></td>
-    <td><button type="button" style="width:184px" onclick="loadDevices()">Refresh</button></td>
+    <td><button type="button" style="width:144px;height:40px" onclick="saveData()">Save New<br>Desired State</button></td>
+    <td><button type="button" style="width:144px;height:40px" onclick="loadDevices()">Refresh</button></td>
     <td><select id="d_duration" onchange="updateTelemetry()">
       <option value="24">24 hours</option>
       <option value="48">2 days</option>
@@ -70,17 +70,18 @@
       <option value="168">1 week</option>
       <option value="-1">All</option>
     </select></td>
+    <td></td><td style="color:green"><b>Wind:</b></td><td><input type='text' id='r_latestWind' style="width:70px" readonly></td>
     </tr>
     </table>
     
     <hr>
-    <div id="curve_chart" style="width: 1180px; height: 500px"></div>
+    <div id="curve_chart" style="width: 1140px; height: 500px"></div>
     <hr>
     <br>
-    <input type='text' id='newDeviceId' style="width:180px" placeholder="Enter device id [A..Z0..9_]..." pattern="[A-Za-z0-9_]+">
-    <input type='text' id='newDeviceName' style="width:180px" placeholder="Enter visible name...">
-    <input type='text' id='newLocation'   style="width:180px" placeholder="Enter location...">
-    <button type="button" style="width:184px" onclick="createDevice()">Create new Device</button>
+    <input type='text' id='newDeviceId' style="width:140px" placeholder="Enter device id [A..Z0..9_]..." pattern="[A-Za-z0-9_]+">
+    <input type='text' id='newDeviceName' style="width:140px" placeholder="Enter visible name...">
+    <input type='text' id='newLocation'   style="width:140px" placeholder="Enter location...">
+    <button type="button" style="width:144px" onclick="createDevice()">Create new Device</button>
 
     <script>
     // Global vars
@@ -172,9 +173,14 @@
           try {
             if (childSnapshot.key.endsWith("Time")) {
                 var d = new Date(childSnapshot.val());
-                document.getElementById(prefix + childSnapshot.key).value = d.toString().substring(0,25);
+                document.getElementById(prefix + childSnapshot.key).innerHTML = 
+                    d.toISOString().substring(0,10) + " " + d.toISOString().substring(11,19);
             } else {
-                document.getElementById(prefix + childSnapshot.key).value = childSnapshot.val();
+                if (prefix == "r_") {
+                    document.getElementById(prefix + childSnapshot.key).innerHTML = childSnapshot.val();
+                } else {
+                    document.getElementById(prefix + childSnapshot.key).value = childSnapshot.val();
+                }
             }
           }
           catch(err) {
@@ -286,7 +292,8 @@
           var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
           chart.draw(data, options);
           
-          document.getElementById("r_latestTime").value = logDate.toString().substring(16,25);
+          document.getElementById("r_latestDay").value = logDate.toISOString().substring(0,10);
+          document.getElementById("r_latestTime").value = logDate.toISOString().substring(11,19);
           document.getElementById("r_latestSetPoint").value = tempSetPoint + " \xB0C";
           document.getElementById("r_latestTemp").value = tempCurrent + " \xB0C";
           document.getElementById("r_latestOutdoor").value = tempOutdoor + " \xB0C";
