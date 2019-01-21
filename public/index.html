@@ -286,18 +286,18 @@
               curveType: 'none',
               hAxis: {format: 'HH:mm\ndd MMM'},
               legend: { position: 'bottom' },
-              chartArea:{left:5,top:70}
+              chartArea:{left:35,top:70}
           };
 
           var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
           chart.draw(data, options);
           
-          document.getElementById("r_latestDate").innerHTML = logDate.toISOString().substring(0,10);
-          document.getElementById("r_latestTime").innerHTML = logDate.toISOString().substring(11,19);
-          document.getElementById("r_latestSetPoint").innerHTML = tempSetPoint + " \xB0C";
-          document.getElementById("r_latestTemp").innerHTML = tempCurrent + " \xB0C";
-          document.getElementById("r_latestOutdoor").innerHTML = tempOutdoor + " \xB0C";
-          document.getElementById("r_latestWind").innerHTML = tempWind + " m/s";
+          document.getElementById("r_latestDate").innerHTML     = logDate.toISOString().substring(0,10);
+          document.getElementById("r_latestTime").innerHTML     = logDate.toISOString().substring(11,19);
+          document.getElementById("r_latestSetPoint").innerHTML = tempSetPoint + " \xB0C"; // degC
+          document.getElementById("r_latestTemp").innerHTML     = tempCurrent + " \xB0C";  // degC
+          document.getElementById("r_latestOutdoor").innerHTML  = tempOutdoor + " \xB0C";  // degC
+          document.getElementById("r_latestWind").innerHTML     = tempWind + " m/s";
         });
     }
     </script>
