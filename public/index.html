@@ -13,7 +13,7 @@
     <h2>IoT portal for device&nbsp;
     <select id="deviceId" style="font-size:14pt" onchange="deviceIdChanged()"></select></h2>
     <br>
-    <table><tr align="left"><th></th><th>DESIRED STATE:</th><th>REPORTED:</th><th></th><th style="width:20px"></th><th colspan="2">LATEST READING:</th>
+    <table style="border:1px solid black"><tr align="left" ><th></th><th>DESIRED STATE:</th><th>REPORTED:</th><th></th><th style="width:20px"></th><th colspan="2">LATEST READING:</th>
     </tr><tr>
     <td><b>Temperature set:</b></td>
     <td><select id="d_tempSetPoint" style="width:144px">
@@ -74,8 +74,7 @@
     </tr>
     </table>
     
-    <hr>
-    <div id="curve_chart" style="width: 1140px; height: 500px"></div>
+    <div id="curve_chart" style="width: 1070px; height: 500px"></div>
     <hr>
     <br>
     <input type='text' id='newDeviceId' style="width:140px" placeholder="Enter device id [A..Z0..9_]..." pattern="[A-Za-z0-9_]+">
@@ -286,7 +285,8 @@
               title: gDeviceFullName,
               curveType: 'none',
               hAxis: {format: 'HH:mm\ndd MMM'},
-              legend: { position: 'bottom' }
+              legend: { position: 'bottom' },
+              chartArea:{left:5,top:70}
           };
 
           var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
