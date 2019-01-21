@@ -31,19 +31,19 @@
     </select></td>
     <td><span id='r_tempSetPoint'>Reading...</span> &deg;C</td>
     <td></td>
-    <td></td><td><b>Date:</b></td><td><input type='text' id='r_latestDay' style="width:70px" readonly></td>
+    <td></td><td><b>Date:</b></td><td><b><span id='r_latestDate'></span></td>
     </tr><tr>
     <td><b>Telemetry interval:</b></td>
     <td><input type='text' id='d_telemetryInterval' style="width:140px" placeholder="Reading..."></td>
     <td><span id='r_telemetryInterval'>Reading...</span> seconds</td>
     <td></td>
-    <td></td><td><b>Time:</b></td><td><input type='text' id='r_latestTime' style="width:70px" readonly></td>
+    <td></td><td><b>Time:</b></td><td><b><span id='r_latestTime'></span></td>
     </tr><tr>
     <td><b>Fallback date:</b></td>
     <td><input type='date' id='d_fallbackDate' style="width:140px" placeholder="Reading..."></td>
     <td></td>
     <td></td>
-    <td></td><td style="color:red"><b>Set temp:</b></td><td><input type='text' id='r_latestSetPoint' style="width:70px" readonly></td>
+    <td></td><td style="color:blue"><b>Actual temp:</b></td><td style="color:blue"><b><span id='r_latestTemp'></span></td>
     </tr><tr>
     <td><b>Fallback temp:</b></td>
     <td><select id="d_fallbackTemp" style="width:144px">
@@ -52,13 +52,13 @@
     </select></td>
     <td></td>
     <td></td>
-    <td></td><td style="color:blue"><b>Actual temp:</b></td><td><input type='text' id='r_latestTemp' style="width:70px" readonly></td>
+    <td></td><td style="color:red"><b>Set temp:</b></td><td style="color:red"><b><span id='r_latestSetPoint'></span></td>
     </tr><tr>
     <td><b>Update time:</b></td>
     <td><span id='d_updateTime'>Reading...</span></td>
     <td><span id='r_updateTime'>Reading...</span></td>
     <td></td>
-    <td></td><td style="color:orange"><b>Outdoor temp:</b></td><td><input type='text' id='r_latestOutdoor' style="width:70px" readonly></td>
+    <td></td><td style="color:orange"><b>Outdoor temp:&nbsp;</b></td><td style="color:orange"><b><span id='r_latestOutdoor'></span></td>
     </tr><tr valign="top">
     <td></td>
     <td><button type="button" style="width:144px;height:40px" onclick="saveData()">Save New<br>Desired State</button></td>
@@ -70,7 +70,7 @@
       <option value="168">1 week</option>
       <option value="-1">All</option>
     </select></td>
-    <td></td><td style="color:green"><b>Wind:</b></td><td><input type='text' id='r_latestWind' style="width:70px" readonly></td>
+    <td></td><td style="color:green"><b>Wind:</b></td><td style="color:green"><b><span id='r_latestWind'></span></td>
     </tr>
     </table>
     
@@ -242,7 +242,7 @@
         data.addColumn('number', 'Actual temp');
         data.addColumn('number', 'Set temp');
         data.addColumn('number', 'Outdoor temp');
-        data.addColumn('number', 'Vind (m/s)');
+        data.addColumn('number', 'Wind (m/s)');
 
         firebase.database().ref(gFirebaseDeviceRoot + '/telemetry').once('value', function(snapshot) {
           var tempOutdoor = 0;
@@ -253,32 +253,32 @@
           var youngest = new Date().getTime()-duration*60*60*1000;
           snapshot.forEach(function(childSnapshot) {
             var childData = childSnapshot.val();
-            tempOutdoor = 0;
-            tempCurrent = 0;
-            tempSetPoint = 0;
-            tempWind = 0;
-            try {
-                tempOutdoor = childData.outdoor.temp;
-            } catch(err) {
-                //console.log(err)
-            }
-            try {
-                tempWind = childData.outdoor.wind;
-            } catch(err) {
-                //console.log(err)
-            }
-            try {
-                tempCurrent = childData.tempCurrent;
-            } catch(err) {
-                //console.log(err)
-            }
-            try {
-                tempSetPoint = childData.tempSetPoint;
-            } catch(err) {
-                //console.log(err)
-            }
             logDate  = new Date(childData.utctime);
             if (duration < 0 || logDate.getTime() > youngest) {
+                tempOutdoor = 0;
+                tempCurrent = 0;
+                tempSetPoint = 0;
+                tempWind = 0;
+                try {
+                    tempOutdoor = childData.outdoor.temp;
+                } catch(err) {
+                    //console.log(err)
+                }
+                try {
+                    tempWind = childData.outdoor.wind;
+                } catch(err) {
+                    //console.log(err)
+                }
+                try {
+                    tempCurrent = childData.tempCurrent;
+                } catch(err) {
+                    //console.log(err)
+                }
+                try {
+                    tempSetPoint = childData.tempSetPoint;
+                } catch(err) {
+                    //console.log(err)
+                }
                 data.addRow( [logDate, tempCurrent, tempSetPoint, tempOutdoor, tempWind] ); 
             }
           });
@@ -292,12 +292,12 @@
           var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
           chart.draw(data, options);
           
-          document.getElementById("r_latestDay").value = logDate.toISOString().substring(0,10);
-          document.getElementById("r_latestTime").value = logDate.toISOString().substring(11,19);
-          document.getElementById("r_latestSetPoint").value = tempSetPoint + " \xB0C";
-          document.getElementById("r_latestTemp").value = tempCurrent + " \xB0C";
-          document.getElementById("r_latestOutdoor").value = tempOutdoor + " \xB0C";
-          document.getElementById("r_latestWind").value = tempWind + " m/s";
+          document.getElementById("r_latestDate").innerHTML = logDate.toISOString().substring(0,10);
+          document.getElementById("r_latestTime").innerHTML = logDate.toISOString().substring(11,19);
+          document.getElementById("r_latestSetPoint").innerHTML = tempSetPoint + " \xB0C";
+          document.getElementById("r_latestTemp").innerHTML = tempCurrent + " \xB0C";
+          document.getElementById("r_latestOutdoor").innerHTML = tempOutdoor + " \xB0C";
+          document.getElementById("r_latestWind").innerHTML = tempWind + " m/s";
         });
     }
     </script>
