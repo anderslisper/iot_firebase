@@ -259,22 +259,22 @@
                 tempSetPoint = 0;
                 tempWind = 0;
                 try {
-                    tempOutdoor = childData.outdoor.temp;
+                    tempOutdoor = Number(childData.outdoor.temp);
                 } catch(err) {
                     //console.log(err)
                 }
                 try {
-                    tempWind = childData.outdoor.wind;
+                    tempWind = Number(childData.outdoor.wind);
                 } catch(err) {
                     //console.log(err)
                 }
                 try {
-                    tempCurrent = childData.tempCurrent;
+                    tempCurrent = Number(childData.tempCurrent);
                 } catch(err) {
                     //console.log(err)
                 }
                 try {
-                    tempSetPoint = childData.tempSetPoint;
+                    tempSetPoint = Number(childData.tempSetPoint);
                 } catch(err) {
                     //console.log(err)
                 }
