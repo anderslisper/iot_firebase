@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>IoT Device Administration</title>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/5.6.0/firebase-app.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/5.6.0/firebase-auth.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/5.6.0/firebase-database.js"></script>
+    <script type="text/javascript" src="firebase_google_login.js"></script>
+  </head>
+  <body>
+    <h2>IoT portal for administraion of device&nbsp;
+    <select id="deviceId" style="font-size:14pt" onchange="deviceIdChanged()"></select></h2>
+    <h2>Handle historic data:</h2>
+    <span id='days'></span>
+    <hr>
+    <h2>Create new device</h2>
+    <input type='text' id='newDeviceId' style="width:140px" placeholder="Enter device id [A..Z0..9_]..." pattern="[A-Za-z0-9_]+">
+    <input type='text' id='newDeviceName' style="width:140px" placeholder="Enter visible name...">
+    <input type='text' id='newLocation'   style="width:140px" placeholder="Enter location...">
+    <button type="button" style="width:144px" onclick="createDevice()">Create new Device</button>
+
+    <script>
+    // Global vars
+    // Firebase path
+    var gFirebaseDeviceRoot = gFirebaseRoot + "NO_DEVICE_ID_SET";
+    // Current device
+    var gDeviceName;
+    var gDeviceFullName; // '<deviceid> in <location>'
+    var gDeviceParameter = getUrlVar('deviceid');
+    var gSelectedIndex = 0;
+    
+    loadDevices();
+
+    function getUrlVar(parameter) {
+        var vars = {};
+        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+            vars[key] = value;
+        });
+        var value = ''
+        try {
+            value = vars[parameter]
+        }
+        catch (err) {
+        }
+        return value;
+    }
+
+    // Load device list from firebase
+    function loadDevices() {
+        var select = document.getElementById('deviceId');
+        while (select.options.length > 0) {                
+            select.remove(0);
+        }        
+        
+        firebase.database().ref(gFirebaseRoot).once('value', function(snapshot) {
+            snapshot.forEach(function(childSnapshot) {
+              var childKey = childSnapshot.key;
+              var opt = document.createElement('option');
+              opt.value = childKey;
+              opt.innerHTML = childKey;
+              try {
+                name = childSnapshot.val().name;
+                loc = childSnapshot.val().location;
+                if (loc != undefined) {
+                    opt.innerHTML = name + ' in ' + loc;
+                }
+              }
+              catch(err) {
+                console.log(err)
+              }
+              if (childKey == gDeviceParameter) {
+                gSelectedIndex = select.length;
+                gDeviceParameter = ''
+              }
+              select.appendChild(opt);    
+            })
+            select.selectedIndex = gSelectedIndex;
+            deviceIdChanged();
+          });
+    }
+    
+    // Called when device has changed
+    function deviceIdChanged() {
+        var select = document.getElementById('deviceId');
+        gSelectedIndex  = select.selectedIndex;
+        gDeviceName     = select.options[gSelectedIndex].value;
+        gDeviceFullName = select.options[gSelectedIndex].innerHTML;
+        gFirebaseDeviceRoot = gFirebaseRoot + '/' + gDeviceName;
+        readData('desired');
+        readData('reported');
+        updateTelemetry();
+    }
+
+    // Read settings data from firebase and update input boxes for either bank='desired' or 'reported'
+    function readData(bank) {
+      var prefix = bank.charAt(0) + '_'; // DOM ids are prefixed by either 'd_' or 'r_'
+      var all = document.getElementsByTagName("*");
+      for (var i = 0; i < all.length; i++) {
+        if (all[i].id.startsWith(prefix) && all[i].tagName == "INPUT") {
+            all[i].value = "";
+        }
+      }
+      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/' + bank).once('value', function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+          try {
+            if (childSnapshot.key.endsWith("Time")) {
+                var d = new Date(childSnapshot.val());
+                document.getElementById(prefix + childSnapshot.key).innerHTML = 
+                    d.toISOString().substring(0,10) + " " + d.toISOString().substring(11,19);
+            } else {
+                if (prefix == "r_") {
+                    document.getElementById(prefix + childSnapshot.key).innerHTML = childSnapshot.val();
+                } else {
+                    document.getElementById(prefix + childSnapshot.key).value = childSnapshot.val();
+                }
+            }
+          }
+          catch(err) {
+            console.log("No matching DOM object for key '" + childSnapshot.key + "'");
+          }
+        });
+      });
+    }
+
+    // Save settings data to firebase
+    function saveData() {
+      var f = document.getElementById('d_tempSetPoint');
+      var tempSetPointVal = f.options[f.selectedIndex].value;
+      var telemetryIntervalVal = document.getElementById('d_telemetryInterval').value;
+      var fallbackDateVal = document.getElementById('d_fallbackDate').value;
+      var fallbackTempVal = document.getElementById('d_fallbackTemp').value;
+      var d = new Date();
+      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/desired').set({
+        tempSetPoint: parseFloat(tempSetPointVal), 
+        telemetryInterval: parseFloat(telemetryIntervalVal),
+        fallbackDate: fallbackDateVal,
+        fallbackTemp: fallbackTempVal,
+        updateTime: d.toISOString()
+      });
+    }
+
+    // Create new device
+    function createDevice() {
+      var devId   = document.getElementById('newDeviceId').value;
+      var devName = document.getElementById('newDeviceName').value;
+      var loc     = document.getElementById('newLocation').value;
+      devId = devId.replace(/[^a-zA-Z0-9_]/g, ""); // Remove all funny chars
+      if (devId != '' && devName != '') {
+          var d = new Date();
+          firebase.database().ref(gFirebaseRoot + '/' + devId + '/device_twin/desired').set({
+            tempSetPoint: 21, 
+            telemetryInterval: 1200,
+            updateTime: d.toISOString()
+          });
+          firebase.database().ref(gFirebaseRoot + '/' + devId).update({
+            name: devName, 
+            location: loc
+          });
+          
+        document.getElementById('newDeviceId').value = "";
+        document.getElementById('newDeviceName').value = "";
+        document.getElementById('newLocation').value = "";
+        loadDevices();
+      }
+    }
+
+    // Load telemetry data for current device and show chart
+    function updateTelemetry() {
+        firebase.database().ref(gFirebaseDeviceRoot + '/telemetry').once('value', function(snapshot) {
+          var logDate;
+          var telemetryMap = new Map()
+          snapshot.forEach(function(childSnapshot) {
+            var childData = childSnapshot.val();
+            logDate = childData.utctime.substring(0,10);
+            cnt = telemetryMap.get(logDate)
+            //console.log(cnt)
+            if (isNaN(cnt)) {
+                cnt = 0
+            }
+            telemetryMap.set(logDate, cnt + 1)
+          });
+          
+          s = '<table><tr><th>Date</th><th>#entries</th></tr>'
+          for (let day of telemetryMap.keys()) {
+            s += '<tr><td>' + day + "</td><td>" + telemetryMap.get(day) + '</td></tr>'
+          }
+          s += '</table>'
+          document.getElementById("days").innerHTML = s
+        });
+    }
+    </script>
+  </body>
+</html>
