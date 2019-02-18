@@ -11,7 +11,8 @@
   </head>
   <body>
     <h2>IoT portal for device&nbsp;
-    <select id="deviceId" style="font-size:14pt" onchange="deviceIdChanged()"></select></h2>
+    <select id="deviceId" style="font-size:14pt" onchange="deviceIdChanged()"></select>
+    <button type="button" onclick="rebootDevice()">Reboot device</button></h2>
     <br>
     <table style="border:1px solid black"><tr align="left" ><th></th><th>DESIRED STATE:</th><th>REPORTED:</th><th></th><th style="width:20px"></th><th colspan="2">LATEST READING:</th>
     </tr><tr>
@@ -59,6 +60,12 @@
     <td><span id='r_updateTime'>Reading...</span></td>
     <td></td>
     <td></td><td style="color:orange"><b>Outdoor temp:&nbsp;</b></td><td style="color:orange"><b><span id='r_latestOutdoor'></span></td>
+    </tr><tr>
+    <td><b>Boot time:</b></td>
+    <td></td>
+    <td><span id='r_bootTime'>Reading...</span></td>
+    <td></td>
+    <td></td><td style="color:green"><b>Wind:</b></td><td style="color:green"><b><span id='r_latestWind'></span></td>
     </tr><tr valign="top">
     <td></td>
     <td><button type="button" style="width:144px;height:40px" onclick="saveData()">Save New<br>Desired State</button></td>
@@ -70,18 +77,15 @@
       <option value="168">1 week</option>
       <option value="-1">All</option>
     </select></td>
-    <td></td><td style="color:green"><b>Wind:</b></td><td style="color:green"><b><span id='r_latestWind'></span></td>
+    <td></td><td></td>
     </tr>
     </table>
-    
+    <input type='hidden' id='d_reboot'>
+    <input type='hidden' id='r_reboot'>
     <div id="curve_chart" style="width: 1070px; height: 500px"></div>
     <hr>
     <br>
-    <input type='text' id='newDeviceId' style="width:140px" placeholder="Enter device id [A..Z0..9_]..." pattern="[A-Za-z0-9_]+">
-    <input type='text' id='newDeviceName' style="width:140px" placeholder="Enter visible name...">
-    <input type='text' id='newLocation'   style="width:140px" placeholder="Enter location...">
-    <button type="button" style="width:144px" onclick="createDevice()">Create new Device</button>
-
+    <a id="administration" href="device_admin.html">Device administration</a>
     <script>
     // Global vars
     // Firebase path
@@ -156,6 +160,9 @@
         readData('desired');
         readData('reported');
         updateTelemetry();
+        
+        var a = document.getElementById('administration');
+        a.href = "device_admin.html?deviceid=" + gDeviceName
     }
 
     // Read settings data from firebase and update input boxes for either bank='desired' or 'reported'
@@ -196,14 +203,23 @@
       var telemetryIntervalVal = document.getElementById('d_telemetryInterval').value;
       var fallbackDateVal = document.getElementById('d_fallbackDate').value;
       var fallbackTempVal = document.getElementById('d_fallbackTemp').value;
+      var rebootVal = document.getElementById('d_reboot').value;
       var d = new Date();
       firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/desired').set({
         tempSetPoint: parseFloat(tempSetPointVal), 
         telemetryInterval: parseFloat(telemetryIntervalVal),
         fallbackDate: fallbackDateVal,
         fallbackTemp: fallbackTempVal,
+        reboot: rebootVal,
         updateTime: d.toISOString()
       });
+    }
+
+    // Order reboot of device
+    function rebootDevice() {
+      var d = new Date();
+      rebootVal = d.toISOString();
+      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/desired/reboot').set(rebootVal);
     }
 
     // Create new device
@@ -217,6 +233,7 @@
           firebase.database().ref(gFirebaseRoot + '/' + devId + '/device_twin/desired').set({
             tempSetPoint: 21, 
             telemetryInterval: 1200,
+            reboot: 1,
             updateTime: d.toISOString()
           });
           firebase.database().ref(gFirebaseRoot + '/' + devId).update({
