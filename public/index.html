@@ -8,11 +8,12 @@
     <script type="text/javascript" src="https://www.gstatic.com/firebasejs/5.6.0/firebase-database.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript" src="firebase_google_login.js"></script>
+    <script type="text/javascript" src="common_functions.js"></script>
+    <script type="text/javascript" src="chart_functions.js"></script>
   </head>
   <body>
     <h2>IoT portal for device&nbsp;
-    <select id="deviceId" style="font-size:14pt" onchange="deviceIdChanged()"></select>
-    <button type="button" onclick="rebootDevice()">Reboot device</button></h2>
+    <select id="deviceId" style="font-size:14pt" onchange="deviceIdChanged()"></select></h2>
     <br>
     <table style="border:1px solid black"><tr align="left" ><th></th><th>DESIRED STATE:</th><th>REPORTED:</th><th></th><th style="width:20px"></th><th colspan="2">LATEST READING:</th>
     </tr><tr>
@@ -70,7 +71,7 @@
     <td></td>
     <td><button type="button" style="width:144px;height:40px" onclick="saveData()">Save New<br>Desired State</button></td>
     <td><button type="button" style="width:144px;height:40px" onclick="loadDevices()">Refresh</button></td>
-    <td><select id="d_duration" onchange="updateTelemetry()">
+    <td><select id="d_duration" onchange="updateTelemetryChart()">
       <option value="24">24 hours</option>
       <option value="48">2 days</option>
       <option value="96">4 days</option>
@@ -83,9 +84,11 @@
     <input type='hidden' id='d_reboot'>
     <input type='hidden' id='r_reboot'>
     <div id="curve_chart" style="width: 1070px; height: 500px"></div>
+    <span id='counterShown'>0</span> entries out of <span id='counterTotal'>0</span> shown.
     <hr>
     <br>
     <a id="administration" href="device_admin.html">Device administration</a>
+
     <script>
     // Global vars
     // Firebase path
@@ -101,222 +104,6 @@
 
     // Set a callback to run when the Google Visualization API is loaded.
     google.charts.setOnLoadCallback(loadDevices);
-
-    function getUrlVar(parameter) {
-        var vars = {};
-        var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
-            vars[key] = value;
-        });
-        var value = ''
-        try {
-            value = vars[parameter]
-        }
-        catch (err) {
-        }
-        return value;
-    }
-
-    // Load device list from firebase
-    function loadDevices() {
-        var select = document.getElementById('deviceId');
-        while (select.options.length > 0) {                
-            select.remove(0);
-        }        
-        
-        firebase.database().ref(gFirebaseRoot).once('value', function(snapshot) {
-            snapshot.forEach(function(childSnapshot) {
-              var childKey = childSnapshot.key;
-              var opt = document.createElement('option');
-              opt.value = childKey;
-              opt.innerHTML = childKey;
-              try {
-                name = childSnapshot.val().name;
-                loc = childSnapshot.val().location;
-                if (loc != undefined) {
-                    opt.innerHTML = name + ' in ' + loc;
-                }
-              }
-              catch(err) {
-                console.log(err)
-              }
-              if (childKey == gDeviceParameter) {
-                gSelectedIndex = select.length;
-                gDeviceParameter = ''
-              }
-              select.appendChild(opt);    
-            })
-            select.selectedIndex = gSelectedIndex;
-            deviceIdChanged();
-          });
-    }
-    
-    // Called when device has changed
-    function deviceIdChanged() {
-        var select = document.getElementById('deviceId');
-        gSelectedIndex  = select.selectedIndex;
-        gDeviceName     = select.options[gSelectedIndex].value;
-        gDeviceFullName = select.options[gSelectedIndex].innerHTML;
-        gFirebaseDeviceRoot = gFirebaseRoot + '/' + gDeviceName;
-        readData('desired');
-        readData('reported');
-        updateTelemetry();
-        
-        var a = document.getElementById('administration');
-        a.href = "device_admin.html?deviceid=" + gDeviceName
-    }
-
-    // Read settings data from firebase and update input boxes for either bank='desired' or 'reported'
-    function readData(bank) {
-      var prefix = bank.charAt(0) + '_'; // DOM ids are prefixed by either 'd_' or 'r_'
-      var all = document.getElementsByTagName("*");
-      for (var i = 0; i < all.length; i++) {
-        if (all[i].id.startsWith(prefix) && all[i].tagName == "INPUT") {
-            all[i].value = "";
-        }
-      }
-      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/' + bank).once('value', function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-          try {
-            if (childSnapshot.key.endsWith("Time")) {
-                var d = new Date(childSnapshot.val());
-                document.getElementById(prefix + childSnapshot.key).innerHTML = 
-                    d.toISOString().substring(0,10) + " " + d.toISOString().substring(11,19);
-            } else {
-                if (prefix == "r_") {
-                    document.getElementById(prefix + childSnapshot.key).innerHTML = childSnapshot.val();
-                } else {
-                    document.getElementById(prefix + childSnapshot.key).value = childSnapshot.val();
-                }
-            }
-          }
-          catch(err) {
-            console.log("No matching DOM object for key '" + childSnapshot.key + "'");
-          }
-        });
-      });
-    }
-
-    // Save settings data to firebase
-    function saveData() {
-      var f = document.getElementById('d_tempSetPoint');
-      var tempSetPointVal = f.options[f.selectedIndex].value;
-      var telemetryIntervalVal = document.getElementById('d_telemetryInterval').value;
-      var fallbackDateVal = document.getElementById('d_fallbackDate').value;
-      var fallbackTempVal = document.getElementById('d_fallbackTemp').value;
-      var rebootVal = document.getElementById('d_reboot').value;
-      var d = new Date();
-      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/desired').set({
-        tempSetPoint: parseFloat(tempSetPointVal), 
-        telemetryInterval: parseFloat(telemetryIntervalVal),
-        fallbackDate: fallbackDateVal,
-        fallbackTemp: fallbackTempVal,
-        reboot: rebootVal,
-        updateTime: d.toISOString()
-      });
-    }
-
-    // Order reboot of device
-    function rebootDevice() {
-      var d = new Date();
-      rebootVal = d.toISOString();
-      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/desired/reboot').set(rebootVal);
-    }
-
-    // Create new device
-    function createDevice() {
-      var devId   = document.getElementById('newDeviceId').value;
-      var devName = document.getElementById('newDeviceName').value;
-      var loc     = document.getElementById('newLocation').value;
-      devId = devId.replace(/[^a-zA-Z0-9_]/g, ""); // Remove all funny chars
-      if (devId != '' && devName != '') {
-          var d = new Date();
-          firebase.database().ref(gFirebaseRoot + '/' + devId + '/device_twin/desired').set({
-            tempSetPoint: 21, 
-            telemetryInterval: 1200,
-            reboot: 1,
-            updateTime: d.toISOString()
-          });
-          firebase.database().ref(gFirebaseRoot + '/' + devId).update({
-            name: devName, 
-            location: loc
-          });
-          
-        document.getElementById('newDeviceId').value = "";
-        document.getElementById('newDeviceName').value = "";
-        document.getElementById('newLocation').value = "";
-        loadDevices();
-      }
-    }
-
-    // Load telemetry data for current device and show chart
-    function updateTelemetry() {
-        var f = document.getElementById('d_duration');
-        var duration = f.options[f.selectedIndex].value;
-        
-        var data = new google.visualization.DataTable();
-        data.addColumn('date',   'Time');
-        data.addColumn('number', 'Actual temp');
-        data.addColumn('number', 'Set temp');
-        data.addColumn('number', 'Outdoor temp');
-        data.addColumn('number', 'Wind (m/s)');
-
-        firebase.database().ref(gFirebaseDeviceRoot + '/telemetry').once('value', function(snapshot) {
-          var tempOutdoor = 0;
-          var tempCurrent = 0;
-          var tempSetPoint = 0;
-          var wind = 0;
-          var logDate;
-          var youngest = new Date().getTime()-duration*60*60*1000;
-          snapshot.forEach(function(childSnapshot) {
-            var childData = childSnapshot.val();
-            logDate  = new Date(childData.utctime);
-            if (duration < 0 || logDate.getTime() > youngest) {
-                tempOutdoor = 0;
-                tempCurrent = 0;
-                tempSetPoint = 0;
-                tempWind = 0;
-                try {
-                    tempOutdoor = Number(childData.outdoor.temp);
-                } catch(err) {
-                    //console.log(err)
-                }
-                try {
-                    tempWind = Number(childData.outdoor.wind);
-                } catch(err) {
-                    //console.log(err)
-                }
-                try {
-                    tempCurrent = Number(childData.tempCurrent);
-                } catch(err) {
-                    //console.log(err)
-                }
-                try {
-                    tempSetPoint = Number(childData.tempSetPoint);
-                } catch(err) {
-                    //console.log(err)
-                }
-                data.addRow( [logDate, tempCurrent, tempSetPoint, tempOutdoor, tempWind] ); 
-            }
-          });
-          var options = {
-              title: gDeviceFullName,
-              curveType: 'none',
-              hAxis: {format: 'HH:mm\ndd MMM'},
-              legend: { position: 'bottom' },
-              chartArea:{left:35,top:70}
-          };
-
-          var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
-          chart.draw(data, options);
-          
-          document.getElementById("r_latestDate").innerHTML     = logDate.toISOString().substring(0,10);
-          document.getElementById("r_latestTime").innerHTML     = logDate.toISOString().substring(11,19);
-          document.getElementById("r_latestSetPoint").innerHTML = tempSetPoint + " \xB0C"; // degC
-          document.getElementById("r_latestTemp").innerHTML     = tempCurrent + " \xB0C";  // degC
-          document.getElementById("r_latestOutdoor").innerHTML  = tempOutdoor + " \xB0C";  // degC
-          document.getElementById("r_latestWind").innerHTML     = tempWind + " m/s";
-        });
-    }
     </script>
   </body>
 </html>
