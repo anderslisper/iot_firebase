@@ -48,52 +48,53 @@
 
     // CLASS Telemetry
     function Telemetry() {
-        this.tempCurrent = 0.0;
+        this.tempCurrent  = 0.0;
         this.tempSetPoint = 0.0;
-        this.wind = 0.0;
-        this.tempOutdoor = 0.0;
-        this.noEnties = 0;
-        this.updateKey = "";
-        this.removeKeys = [];
+        this.wind         = 0.0;
+        this.tempOutdoor  = 0.0;
+        this.noEnties     = 0;
+        this.updateKey    = "";
+        this.removeKeys   = [];
         
         this.add = function(key, data) {
-            this.tempCurrent += data.tempCurrent;
+            this.tempCurrent  += data.tempCurrent;
             this.tempSetPoint += data.tempSetPoint;
-            this.wind += data.outdoor.wind;
-            this.tempOutdoor += data.outdoor.temp;
+            this.wind         += data.outdoor.wind;
+            this.tempOutdoor  += data.outdoor.temp;
             this.noEnties++;
             if (this.updateKey == "") {
-              this.updateKey = key;
-              this.utctime = data.utctime;
-              //console.log("Will update " + key);
+                // First entry will be the "updateKey", i.e. the only entry that remains after compacting
+                this.updateKey = key;
+                // Take utctime from first entry
+                this.utctime   = data.utctime; 
             } else {
-              this.removeKeys.push(key);  
-              //console.log("Will remove " + key);
+                // All other entries will be removed
+                this.removeKeys.push(key);  
             }
         }
 
         this.updateDatabase = function() {
-          if (this.updateKey != "") {
+            // Calculate average for all entries and update the "updateKey" entry
             averTempCurrent  = Math.round((this.tempCurrent  / this.noEnties) * 10) / 10;
             averTempSetPoint = Math.round((this.tempSetPoint / this.noEnties) * 10) / 10;
             averWind         = Math.round((this.wind         / this.noEnties) * 10) / 10;
             averTempOutdoor  = Math.round((this.tempOutdoor  / this.noEnties) * 10) / 10;
             firebase.database().ref(gFirebaseDeviceRoot + '/telemetry/' + this.updateKey).set({
-              tempCurrent: averTempCurrent, 
-              tempSetPoint: averTempSetPoint,
-              tempAlert: false,
-              utctime: this.utctime,
-              outdoor: { 
-                temp: averTempOutdoor,
-                wind: averWind,
-                fetched_utctime: this.utctime
-              }
+                tempCurrent:  averTempCurrent, 
+                tempSetPoint: averTempSetPoint,
+                tempAlert:    false,
+                utctime:      this.utctime,
+                outdoor: { 
+                    temp: averTempOutdoor,
+                    wind: averWind,
+                    fetched_utctime: this.utctime
+                }
             });
           
+            // Remove all other entries for this Telemetry
             for (var key in this.removeKeys) { 
-              firebase.database().ref(gFirebaseDeviceRoot + '/telemetry/' + this.removeKeys[key]).remove();
+                firebase.database().ref(gFirebaseDeviceRoot + '/telemetry/' + this.removeKeys[key]).remove();
             }
-          }
         }
     }
     
@@ -109,6 +110,7 @@
           if (childData.utctime.substring(0,10) == date) {
             var hour = parseInt(childData.utctime.substring(11,13));
             if (hour != currHour) {
+              // "New" hour found. Create a new Telemetry object to add data to
               currHour = hour;
               telemetry = new Telemetry();
               telemetryObjects.push(telemetry);
@@ -117,7 +119,6 @@
           }
         });
         for (var t in telemetryObjects) {
-          //console.log("Handling object " + telemetryObjects[t].updateKey + " with " + telemetryObjects[t].noEnties + " entries");
           telemetryObjects[t].updateDatabase();
         }
       });
@@ -131,12 +132,12 @@
         snapshot.forEach(function(childSnapshot) {
           var childData = childSnapshot.val();
           if (childData.utctime.substring(0,10) == date) {
+            // Correct date, add to entries to be removed
             removeVector.push(childSnapshot.key);
           }
         });
         for (var key in removeVector) {
           firebase.database().ref(gFirebaseDeviceRoot + '/telemetry/' + removeVector[key]).remove();
-          //console.log("Removing key " + removeVector[key]);
         }
       });
     }
@@ -144,18 +145,18 @@
     // Load telemetry data for current device and show table
     function updateTelemetryTable() {
         firebase.database().ref(gFirebaseDeviceRoot + '/telemetry').once('value', function(snapshot) {
-          var logDate;
           var telemetryMap = new Map()
           snapshot.forEach(function(childSnapshot) {
             var childData = childSnapshot.val();
-            logDate = childData.utctime.substring(0,10);
+            var logDate = childData.utctime.substring(0,10);
             cnt = telemetryMap.get(logDate)
             if (isNaN(cnt)) {
                 cnt = 0
             }
-            telemetryMap.set(logDate, cnt + 1)
+            telemetryMap.set(logDate, cnt + 1); // Count #Entries per logDate
           });
           
+          // Empty table
           var daysTable = document.getElementById("table_days");
           while (daysTable.firstChild) {
             daysTable.removeChild(daysTable.firstChild);
