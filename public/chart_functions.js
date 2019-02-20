@@ -5,7 +5,7 @@
         updateTelemetryChart();
         
         var a = document.getElementById('administration');
-        a.href = "device_admin.html?deviceid=" + gDeviceName;
+        a.href = "device_admin.html?deviceid=" + gDeviceId;
     }
 
     // Read settings data from firebase and update input boxes for either bank='desired' or 'reported'

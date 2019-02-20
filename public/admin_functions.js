@@ -4,7 +4,7 @@
         updateTelemetryTable();
         
         var a = document.getElementById('portal');
-        a.href = "index.html?deviceid=" + gDeviceName;
+        a.href = "index.html?deviceid=" + gDeviceId;
 
     }
     
@@ -156,34 +156,60 @@
             telemetryMap.set(logDate, cnt + 1); // Count #Entries per logDate
           });
           
-          // Empty table
+          // Empty the table
           var daysTable = document.getElementById("table_days");
           while (daysTable.firstChild) {
             daysTable.removeChild(daysTable.firstChild);
           }
 
+          var noDates = telemetryMap.size;
+          
           var row = daysTable.insertRow(0);
           row.insertCell(0).innerHTML = "Date:";
-          row.insertCell(1).innerHTML = "#Entries:";
-          row.insertCell(2).innerHTML = "Command:";
+          row.insertCell(1).innerHTML = "#:";
+          row.insertCell(2).innerHTML = "Cmd:";
+          var neededColumns = 1;
+          var neededRows = noDates;
+          if (noDates > 5) {
+              row.insertCell(3).innerHTML = "Date:";
+              row.insertCell(4).innerHTML = "#:";
+              row.insertCell(5).innerHTML = "Cmd:";
+              row.insertCell(6).innerHTML = "Date:";
+              row.insertCell(7).innerHTML = "#:";
+              row.insertCell(8).innerHTML = "Cmd:";
+              neededColumns = 3;
+              neededRows = Math.floor((noDates+2) / 3);
+          }
 
-          for (let day of telemetryMap.keys()) {
-            entries = telemetryMap.get(day);
+          var r;
+          for (r = 0; r < neededRows ; r++) {
             row = daysTable.insertRow(-1);
-            row.insertCell(0).innerHTML = day;
-            row.insertCell(1).innerHTML = entries;
+            var c;
+            for (c=0; c < 3*neededColumns ; c++) {
+                row.insertCell(-1);
+            }
+          }
+          var e = 0;
+          for (let date of telemetryMap.keys()) {
+            var r = (e % neededRows) + 1;
+            var c = Math.floor(e/neededRows) * 3;
+            entries = telemetryMap.get(date);
+            row = daysTable.insertRow(-1);
+            daysTable.rows[r].cells[c].innerHTML = date;
+            daysTable.rows[r].cells[c+1].innerHTML = entries;
 
             var btn = document.createElement('input');
             btn.type = "button";
             btn.className = "btn";
             if (entries > 24) {
               btn.value = "Compact";
-              btn.onclick = (function() {compactDay(day);});
+              btn.onclick = (function() {compactDay(date);});
             } else {
               btn.value = "Remove";
-              btn.onclick = (function() {removeDay(day);});
+              btn.onclick = (function() {removeDay(date);});
             }
-            row.insertCell(2).appendChild(btn);
+            daysTable.rows[r].cells[c+2].appendChild(btn);
+            e++;
           }
-        });
+        }); 
     }

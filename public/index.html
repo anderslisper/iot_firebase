@@ -90,18 +90,8 @@
     <a id="administration" href="device_admin.html">Device administration</a>
 
     <script>
-    // Global vars
-    // Firebase path
-    var gFirebaseDeviceRoot = gFirebaseRoot + "NO_DEVICE_ID_SET";
-    // Current device
-    var gDeviceName;
-    var gDeviceFullName; // '<deviceid> in <location>'
-    var gDeviceParameter = getUrlVar('deviceid');
-    var gSelectedIndex = 0;
-    
     // Load the Visualization API and the corechart package.
     google.charts.load('current', {'packages':['corechart']});
-
     // Set a callback to run when the Google Visualization API is loaded.
     google.charts.setOnLoadCallback(loadDevices);
     </script>

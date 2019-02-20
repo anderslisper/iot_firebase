@@ -12,18 +12,21 @@
     <style>
          table, td, th {
             border: 1px solid;
-            width: 300px;
+            padding: 5px;
             text-align: center;
          }
     </style>
   </head>
   <body>
+    <a id="portal" href="index.html">Back to portal</a>
     <h2>IoT portal for administraion of device&nbsp;
     <select id="deviceId" style="font-size:14pt" onchange="deviceIdChanged()"></select></h2>
-    <a id="portal" href="index.html">Back to portal</a>
     <hr>
     <h2>Reboot device</h2>
     <button type="button" style="width:144px;height:40px" onclick="rebootDevice()">REBOOT device</button>
+    <hr>
+    <h2>Handle historic data:</h2>
+    <table id='table_days'><tr><td>Date:</td><td>#:</td><td>Cmd:</td></tr></table>
     <hr>
     <h2>Create new device</h2>
     <input type='text' id='newDeviceId'   style="width:140px" placeholder="Enter device id [A..Z0..9_]..." pattern="[A-Za-z0-9_]+">
@@ -31,24 +34,11 @@
     <input type='text' id='newLocation'   style="width:140px" placeholder="Enter location...">
     <button type="button" style="width:144px" onclick="createDevice()">Create new Device</button>
     <hr>
-    <h2>Handle historic data:</h2>
-    <table id='table_days'><tr><td>Date:</td><td>#Entries:</td><td>Command:</td></tr></table>
-    <hr>
     <h2>Delete device</h2>
     <button type="button" style="width:144px;height:40px" onclick="deleteDevice()">DELETE device</button> <b>NO UNDO!!!</b>
 
     <script>
-    // Global vars
-    // Firebase path
-    var gFirebaseDeviceRoot = gFirebaseRoot + "NO_DEVICE_ID_SET";
-    // Current device
-    var gDeviceName;
-    var gDeviceFullName; // '<deviceid> in <location>'
-    var gDeviceParameter = getUrlVar('deviceid');
-    var gSelectedIndex = 0;
-    
     loadDevices();
-
     </script>
   </body>
 </html>
