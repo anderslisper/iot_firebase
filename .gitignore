@@ -14,10 +14,10 @@ firebase-debug.log*
 # Uncomment this if you'd like others to create their own Firebase project.
 # For a team working on the same Firebase project(s), it is recommended to leave
 # it commented so all members can deploy to the same project(s) in .firebaserc.
-.firebaserc
+#.firebaserc
 
 # Ignore files that contain project and login info
-database.rules.json
+#database.rules.json
 firebase_env_setup.secret
 public/firebase_login.js
 public/firebase_google_login.js
