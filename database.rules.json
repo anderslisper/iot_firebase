@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth.uid === $uid  || auth.uid === 'tI4k3bmWSFQSonmIH87wRxwXgkl1' || auth.uid === 'gmSYv9UYmROAXyRsbGChdgvbXWg2'",
+        ".write": "auth.uid === $uid || auth.uid === 'tI4k3bmWSFQSonmIH87wRxwXgkl1' || auth.uid === 'gmSYv9UYmROAXyRsbGChdgvbXWg2'"
+      }
+    }
+  }
+}
