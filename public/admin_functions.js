@@ -1,11 +1,16 @@
 
     // Called from common_functions::deviceIdChanged when device has changed to allow for local adaptions
     function deviceIdHasChanged() {
+        gDuration = gDurationParameter;
         updateTelemetryTable();
         
         var a = document.getElementById('portal');
-        a.href = "index.html?deviceid=" + gDeviceId;
+        a.href = getHrefToPageWithParameters("index.html");
 
+        var ip = document.getElementById('ipaddress');
+        firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/reported').once('value').then(function(snapshot) {
+            ip.innerHTML = (snapshot.val() && snapshot.val().ipAddress) || "?:?:?:?";
+        });
     }
     
     // Create new device
@@ -38,7 +43,7 @@
     function rebootDevice() {
       var d = new Date();
       rebootVal = d.toISOString();
-      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/desired/reboot').set(rebootVal);
+      firebase.database().ref(gFirebaseDeviceRoot + '/reboot').set(rebootVal);
     }
 
     // Delete device

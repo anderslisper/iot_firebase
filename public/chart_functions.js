@@ -5,7 +5,7 @@
         updateTelemetryChart();
         
         var a = document.getElementById('administration');
-        a.href = "device_admin.html?deviceid=" + gDeviceId;
+        a.href = getHrefToPageWithParameters("device_admin.html");
     }
 
     // Read settings data from firebase and update input boxes for either bank='desired' or 'reported'
@@ -46,14 +46,12 @@
       var telemetryIntervalVal = document.getElementById('d_telemetryInterval').value;
       var fallbackDateVal = document.getElementById('d_fallbackDate').value;
       var fallbackTempVal = document.getElementById('d_fallbackTemp').value;
-      var rebootVal = document.getElementById('d_reboot').value;
       var d = new Date();
       firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/desired').set({
         tempSetPoint: parseFloat(tempSetPointVal), 
         telemetryInterval: parseFloat(telemetryIntervalVal),
         fallbackDate: fallbackDateVal,
         fallbackTemp: fallbackTempVal,
-        reboot: rebootVal,
         updateTime: d.toISOString()
       });
     }
@@ -61,7 +59,17 @@
     // Load telemetry data for current device and show chart
     function updateTelemetryChart() {
         var f = document.getElementById('d_duration');
-        var duration = f.options[f.selectedIndex].value;
+        if (gDurationParameter != '') {
+            for(i = 0; i < f.length; i++) {
+                if (gDurationParameter == f[i].value) {
+                    f.selectedIndex = i;
+                    break;
+                }
+            }
+            gDurationParameter = ''
+        }
+        
+        gDuration = f.options[f.selectedIndex].value;
         
         var data = new google.visualization.DataTable();
         data.addColumn('date',   'Time');
@@ -78,12 +86,12 @@
           var logDate;
           var counterTotal = 0;
           var counterShown = 0;
-          var youngest = new Date().getTime()-duration*60*60*1000;
+          var youngest = new Date().getTime()-gDuration*60*60*1000;
           snapshot.forEach(function(childSnapshot) {
             var childData = childSnapshot.val();
             counterTotal++;
             logDate = new Date(childData.utctime);
-            if (duration < 0 || logDate.getTime() > youngest) {
+            if (gDuration == 0 || logDate.getTime() > youngest) {
                 counterShown++;
                 tempOutdoor = 0;
                 tempCurrent = 0;

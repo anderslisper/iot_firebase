@@ -2,8 +2,10 @@
     var gFirebaseDeviceRoot = gFirebaseRoot + "NO_DEVICE_ID_SET";
     // Current device
     var gDeviceId;
+    var gDuration;
     var gDeviceFullName; // '<deviceid> in <location>'
-    var gDeviceParameter = getUrlVar('deviceid');
+    var gDeviceIdParameter = getUrlVar('deviceid');
+    var gDurationParameter = getUrlVar('duration');
     var gSelectedIndex = 0;
 
     function getUrlVar(parameter) {
@@ -20,6 +22,10 @@
         return value;
     }
 
+    function getHrefToPageWithParameters(pageName) {
+        return pageName + "?deviceid=" + gDeviceId + "&duration=" + gDuration;
+    }
+    
     // Load device list from firebase
     function loadDevices() {
         var select = document.getElementById('deviceId');
@@ -43,9 +49,9 @@
               catch(err) {
                 console.log(err)
               }
-              if (childKey == gDeviceParameter) {
+              if (childKey == gDeviceIdParameter) {
                 gSelectedIndex = select.length;
-                gDeviceParameter = ''
+                gDeviceIdParameter = ''
               }
               select.appendChild(opt);    
             })
@@ -58,7 +64,7 @@
     function deviceIdChanged() {
         var select = document.getElementById('deviceId');
         gSelectedIndex  = select.selectedIndex;
-        gDeviceId     = select.options[gSelectedIndex].value;
+        gDeviceId       = select.options[gSelectedIndex].value;
         gDeviceFullName = select.options[gSelectedIndex].innerHTML;
         gFirebaseDeviceRoot = gFirebaseRoot + '/' + gDeviceId;
 
