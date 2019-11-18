@@ -4,8 +4,8 @@
     var gDeviceId;
     var gDuration;
     var gDeviceFullName; // '<deviceid> in <location>'
-    var gDeviceIdParameter = getUrlVar('deviceid');
-    var gDurationParameter = getUrlVar('duration');
+    var gDeviceIdParameter = "";
+    var gDurationParameter = "";
     var gSelectedIndex = 0;
 
     function getUrlVar(parameter) {
@@ -22,17 +22,18 @@
         return value;
     }
 
-    function getHrefToPageWithParameters(pageName) {
-        return pageName + "?deviceid=" + gDeviceId + "&duration=" + gDuration;
-    }
-    
     // Load device list from firebase
     function loadDevices() {
         var select = document.getElementById('deviceId');
         while (select.options.length > 0) {                
             select.remove(0);
         }        
-        
+ 
+        gDeviceIdParameter = getCookie("device_id");
+        console.log("device_id: " + gDeviceIdParameter);
+        gDurationParameter = getCookie("duration");
+        console.log("Duration: " + gDurationParameter);
+
         firebase.database().ref(gFirebaseRoot).once('value', function(snapshot) {
             snapshot.forEach(function(childSnapshot) {
               var childKey = childSnapshot.key;
@@ -68,7 +69,31 @@
         gDeviceFullName = select.options[gSelectedIndex].innerHTML;
         gFirebaseDeviceRoot = gFirebaseRoot + '/' + gDeviceId;
 
+        setCookie("device_id", gDeviceId, 30);
+
         // Callback to page specific function
         deviceIdHasChanged();
     }
 
+    function setCookie(cname, cvalue, exdays) {
+      var d = new Date();
+      d.setTime(d.getTime() + (exdays*24*60*60*1000));
+      var expires = "expires="+ d.toUTCString();
+      document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+    
+    function getCookie(cname) {
+      var name = cname + "=";
+      var decodedCookie = decodeURIComponent(document.cookie);
+      var ca = decodedCookie.split(';');
+      for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+          c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+      return "";
+    }

@@ -2,10 +2,8 @@
 
 const functions = require('firebase-functions');
 const nodemailer = require('nodemailer');
-//const admin = require('firebase-admin');
-//admin.initializeApp(functions.config().firebase);
 
-const firebaseRoot  = functions.config().database.root;
+//const firebaseRoot  = functions.config().database.root;
 const adminEmail    = functions.config().admin.email;
 const alertEmail    = functions.config().tempalert.email;
 const gmailEmail    = functions.config().gmail.email;
@@ -19,19 +17,10 @@ const mailTransport = nodemailer.createTransport({
 });
 
 // Sends an email when a device's reported state is reported
-exports.sendEmail = functions.database.ref(firebaseRoot + '{deviceId}/device_twin/reported').onWrite(async (change, context) => {
+exports.sendEmail = functions.database.ref('{deviceId}/device_twin/reported').onWrite(async (change, context) => {
   const deviceId = context.params.deviceId
   const val = change.after.val();
 
-//  admin.database().ref(firebaseRoot+deviceId).once('value', function(snapshot) {
-//    name = deviceId;
-//    try {
-//        name = snapshot.val().name;
-//    }
-//    catch(err) {
-//        console.log(err)
-//    }
-//  });
   console.log(val);
 
   var mailTo = adminEmail

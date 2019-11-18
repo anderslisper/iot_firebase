@@ -3,9 +3,6 @@
         readData('desired');
         readData('reported');
         updateTelemetryChart();
-        
-        var a = document.getElementById('administration');
-        a.href = getHrefToPageWithParameters("device_admin.html");
     }
 
     // Read settings data from firebase and update input boxes for either bank='desired' or 'reported'
@@ -70,7 +67,10 @@
         }
         
         gDuration = f.options[f.selectedIndex].value;
-        
+
+        setCookie("duration", gDuration, 30);
+        console.log("set Duration: " + gDuration);
+
         var data = new google.visualization.DataTable();
         data.addColumn('date',   'Time');
         data.addColumn('number', 'Actual temp');

@@ -2,7 +2,7 @@
   "name": "email-confirmation-functions",
   "description": "Send Email when device reports a new state",
   "dependencies": {
-    "firebase-admin": "~6.4.0",
+    "firebase-admin": "^6.4.0",
     "firebase-functions": "^2.1.0",
     "nodemailer": "^2.7.2"
   },

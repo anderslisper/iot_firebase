@@ -1,12 +1,8 @@
 
     // Called from common_functions::deviceIdChanged when device has changed to allow for local adaptions
     function deviceIdHasChanged() {
-        gDuration = gDurationParameter;
         updateTelemetryTable();
         
-        var a = document.getElementById('portal');
-        a.href = getHrefToPageWithParameters("index.html");
-
         var ip = document.getElementById('ipaddress');
         firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/reported').once('value').then(function(snapshot) {
             ip.innerHTML = (snapshot.val() && snapshot.val().ipAddress) || "?:?:?:?";
@@ -24,12 +20,12 @@
           firebase.database().ref(gFirebaseRoot + '/' + devId + '/device_twin/desired').set({
             tempSetPoint: 21, 
             telemetryInterval: 1200,
-            reboot: "",
             updateTime: d.toISOString()
           });
           firebase.database().ref(gFirebaseRoot + '/' + devId).update({
             name: devName, 
-            location: loc
+            location: loc,
+            reboot: ""
           });
           
         document.getElementById('newDeviceId').value = "";
