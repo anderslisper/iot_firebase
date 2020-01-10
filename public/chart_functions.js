@@ -19,8 +19,7 @@
           try {
             if (childSnapshot.key.endsWith("Time")) {
                 var d = new Date(childSnapshot.val());
-                document.getElementById(prefix + childSnapshot.key).innerHTML = 
-                    d.toISOString().substring(0,10) + " " + d.toISOString().substring(11,19);
+                document.getElementById(prefix + childSnapshot.key).innerHTML = d.toLocaleString();
             } else {
                 if (prefix == "r_") {
                     document.getElementById(prefix + childSnapshot.key).innerHTML = childSnapshot.val();
@@ -131,8 +130,8 @@
           var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
           chart.draw(data, options);
           
-          document.getElementById("r_latestDate").innerHTML     = logDate.toISOString().substring(0,10);
-          document.getElementById("r_latestTime").innerHTML     = logDate.toISOString().substring(11,19);
+          document.getElementById("r_latestDate").innerHTML     = logDate.toLocaleDateString();
+          document.getElementById("r_latestTime").innerHTML     = logDate.toLocaleTimeString();
           document.getElementById("r_latestSetPoint").innerHTML = tempSetPoint + " \xB0C"; // degC
           document.getElementById("r_latestTemp").innerHTML     = tempCurrent + " \xB0C";  // degC
           document.getElementById("r_latestOutdoor").innerHTML  = tempOutdoor + " \xB0C";  // degC

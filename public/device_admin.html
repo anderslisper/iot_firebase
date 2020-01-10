@@ -23,10 +23,13 @@
     <select id="deviceId" style="font-size:14pt" onchange="deviceIdChanged()"></select></h2>
     <hr>
     <h2>Device IP address on local network</h2>
-    <div id="ipaddress">0:0:0:0</div>
+    ssh anders@<div id="ipaddress">0:0:0:0</div>
     <hr>
     <h2>Reboot device</h2>
     <button type="button" style="width:144px;height:40px" onclick="rebootDevice()">REBOOT device</button>
+    <hr>
+    <h2>Upgrade telemetry database</h2>
+    <button type="button" style="width:144px;height:40px" onclick="upgradeTelemetry()">UPGRADE</button>
     <hr>
     <h2>Handle historic data:</h2>
     <table id='table_days'><tr><td>Date:</td><td>#:</td><td>Cmd:</td></tr></table>

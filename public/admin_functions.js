@@ -125,6 +125,29 @@
       });
     }
     
+    // Upgrade database by iterating all telemetry entries
+    function upgradeTelemetry() {
+      //console.log("update " + date);
+      firebase.database().ref(gFirebaseDeviceRoot + '/telemetry').once('value', function(snapshot) {
+        var telemetryObjects = [];
+        var telemetry = null;
+        snapshot.forEach(function(childSnapshot) {
+          var childData = childSnapshot.val();
+          telemetry = new Telemetry();
+          telemetry.add(childSnapshot.key, childData);
+		  if (telemetry.utctime.endsWith("Z") == false)
+		  {
+			telemetry.utctime = telemetry.utctime + "Z"
+			telemetryObjects.push(telemetry);
+		  }
+        });
+
+        for (var t in telemetryObjects) {
+          telemetryObjects[t].updateDatabase();
+        }
+      });
+    }
+    
     // Remove all entries for this "date"
     function removeDay(date) {
       //console.log("remove " + date);
