@@ -25,8 +25,15 @@
     <h2>Device IP address on local network</h2>
     ssh anders@<div id="ipaddress" style="display: inline-block">0:0:0:0</div>
     <hr>
+    <h2>Software</h2>
+    Version: <div id="sw_version" style="display: inline-block"></div><br>
+    Date: <div id="sw_date" style="display: inline-block"></div>
+    <hr>
     <h2>Reboot device</h2>
     <button type="button" style="width:144px;height:40px" onclick="rebootDevice()">REBOOT device</button>
+    <hr>
+    <h2>Get logs</h2>
+    <button type="button" style="width:144px;height:40px" onclick="getLogs()">Get logs</button>
     <hr>
     <h2>Upgrade telemetry database</h2>
     <button type="button" style="width:144px;height:40px" onclick="upgradeTelemetry()">UPGRADE</button>

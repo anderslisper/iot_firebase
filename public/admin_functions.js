@@ -4,8 +4,14 @@
         updateTelemetryTable();
         
         var ip = document.getElementById('ipaddress');
+        var sw_version = document.getElementById('sw_version');
+        var sw_date = document.getElementById('sw_date');
         firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/reported').once('value').then(function(snapshot) {
             ip.innerHTML = (snapshot.val() && snapshot.val().ipAddress) || "?:?:?:?";
+        });
+        firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/reported/software').once('value').then(function(snapshot) {
+            sw_version.innerHTML = (snapshot.val() && snapshot.val().version) || "?";
+            sw_date.innerHTML = (snapshot.val() && snapshot.val().date) || "?";
         });
     }
     
@@ -40,6 +46,13 @@
       var d = new Date();
       rebootVal = d.toISOString();
       firebase.database().ref(gFirebaseDeviceRoot + '/reboot').set(rebootVal);
+    }
+
+    // Order upload of logs
+    function getLogs() {
+      var d = new Date();
+      getLogVal = d.toISOString();
+      firebase.database().ref(gFirebaseDeviceRoot + '/getlog').set(getLogVal);
     }
 
     // Delete device
