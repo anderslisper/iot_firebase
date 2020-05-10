@@ -19,6 +19,7 @@
     </tr><tr>
     <td><b>Temperature set:</b></td>
     <td><select id="d_tempSetPoint" style="width:144px">
+      <option value="0">System Off</option>
       <option value="10">LowHeat (10&deg;C)</option>
       <option value="16">16&deg;C</option>
       <option value="17">17&deg;C</option>
@@ -41,13 +42,13 @@
     <td></td>
     <td></td><td><b>Time:</b></td><td><b><span id='r_latestTime'></span></td>
     </tr><tr>
-    <td><b>Fallback date:</b></td>
+    <td><b>Next return date:</b></td>
     <td><input type='date' id='d_fallbackDate' style="width:140px" placeholder="Reading..."></td>
-    <td></td>
+    <td>Activated: <span id='r_fallbackActivated'></span></td>
     <td></td>
     <td></td><td style="color:blue"><b>Actual temp:</b></td><td style="color:blue"><b><span id='r_latestTemp'></span></td>
     </tr><tr>
-    <td><b>Fallback temp:</b></td>
+    <td><b>@Return set temp to:</b></td>
     <td><select id="d_fallbackTemp" style="width:144px">
       <option value="16">16&deg;C</option>
       <option value="21">21&deg;C</option>

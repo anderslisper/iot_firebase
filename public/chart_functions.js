@@ -47,7 +47,7 @@
         tempSetPoint: parseFloat(tempSetPointVal), 
         telemetryInterval: parseFloat(telemetryIntervalVal),
         fallbackDate: fallbackDateVal,
-        fallbackTemp: fallbackTempVal,
+        fallbackTemp: parseFloat(fallbackTempVal),
         updateTime: d.toISOString()
       });
     }
