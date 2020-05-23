@@ -21,7 +21,7 @@
                 var d = new Date(childSnapshot.val());
                 document.getElementById(prefix + childSnapshot.key).innerHTML = d.toLocaleString();
             } else {
-                if (prefix == "r_") {
+                if (prefix == "r_" && childSnapshot.key != "tempSetPoint") {
                     document.getElementById(prefix + childSnapshot.key).innerHTML = childSnapshot.val();
                 } else {
                     document.getElementById(prefix + childSnapshot.key).value = childSnapshot.val();
