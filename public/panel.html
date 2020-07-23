@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>IoT Portal</title>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/5.6.0/firebase-app.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/5.6.0/firebase-auth.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/firebasejs/5.6.0/firebase-database.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="firebase_google_login.js"></script>
+    <script type="text/javascript" src="common_functions.js"></script>
+    <script type="text/javascript" src="panel_functions.js"></script>
+  </head>
+  <style>
+	Button {
+		box-shadow: 3px 4px 7px 0px #899599;
+		background:linear-gradient(to bottom, #ededed 5%, #bab1ba 100%);
+		background-color:#ededed;
+		border-radius:15px;
+		border:1px solid #d6bcd6;
+		display:inline-block;
+		cursor:pointer;
+		color:#3a8a9e;
+		font-family:Arial;
+		font-size:50px;
+		padding:25px 25px;
+		text-decoration:none;
+		text-shadow:0px 1px 0px #e1e2ed;
+		width:100%;
+	}
+	Button:hover {
+		background:linear-gradient(to bottom, #bab1ba 5%, #ededed 100%);
+		background-color:#bab1ba;
+	}
+	Button:active {
+		position:relative;
+		top:1px;
+	}  
+  </style>
+  <body>
+    <h2>IoT panel for device<br>
+    <select id="deviceId" style="font-size:14pt" onchange="deviceIdChanged()"></select></h2>
+    <br>
+		<button type="button" style='width:100%' onclick='saveSetPoint(0)'>System Off</button>
+		<button type="button" style='width:100%' onclick='saveSetPoint(10)'>LowHeat (10&deg;C)</button>
+		<button type="button" style='width:100%' onclick='saveSetPoint(16)'>16&deg;C</button>
+		<button type="button" style='width:100%' onclick='saveSetPoint(21)'>21&deg;C</button>
+		<button type="button" style='width:100%' onclick='saveSetPoint(121)'>&#10052; 21&deg;C</button>
+    <hr>
+		Desired: <span id='desired'>...</span><br>
+		Reported: <span id='reported'>...</span><br>
+	<hr>
+    <br>
+    <a id="portal" href="index.html">Device portal</a>
+    <br>
+    <a id="administration" href="device_admin.html">Device administration</a>
+    <script>
+    loadDevices();
+    </script>
+  </body>
+</html>

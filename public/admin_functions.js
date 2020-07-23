@@ -71,8 +71,10 @@
         this.removeKeys   = [];
         
         this.add = function(key, data) {
+            if (data.tempSetPoint > this.tempSetPoint) {
+				this.tempSetPoint = data.tempSetPoint;
+			}
             this.tempCurrent  += data.tempCurrent;
-            this.tempSetPoint += data.tempSetPoint;
             this.wind         += data.outdoor.wind;
             this.tempOutdoor  += data.outdoor.temp;
             this.noEnties++;
@@ -90,12 +92,11 @@
         this.updateDatabase = function() {
             // Calculate average for all entries and update the "updateKey" entry
             averTempCurrent  = Math.round((this.tempCurrent  / this.noEnties) * 10) / 10;
-            averTempSetPoint = Math.round((this.tempSetPoint / this.noEnties) * 10) / 10;
             averWind         = Math.round((this.wind         / this.noEnties) * 10) / 10;
             averTempOutdoor  = Math.round((this.tempOutdoor  / this.noEnties) * 10) / 10;
             firebase.database().ref(gFirebaseDeviceRoot + '/telemetry/' + this.updateKey).set({
                 tempCurrent:  averTempCurrent, 
-                tempSetPoint: averTempSetPoint,
+                tempSetPoint: this.tempSetPoint,
                 tempAlert:    false,
                 utctime:      this.utctime,
                 outdoor: { 
