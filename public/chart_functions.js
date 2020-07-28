@@ -14,7 +14,7 @@
             all[i].value = "";
         }
       }
-      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/' + bank).once('value', function(snapshot) {
+      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/' + bank).on('value', function(snapshot) {
         snapshot.forEach(function(childSnapshot) {
           try {
             if (childSnapshot.key.endsWith("Time")) {

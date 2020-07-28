@@ -6,7 +6,7 @@
 
     // Read settings data from firebase and update input boxes for either bank='desired' or 'reported'
     function readSetPoint(bank) {
-      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/' + bank).once('value').then(function(snapshot) {
+      firebase.database().ref(gFirebaseDeviceRoot + '/device_twin/' + bank).on('value', function(snapshot) {
 		  try {
 			document.getElementById(bank).innerHTML = snapshot.val().tempSetPoint;
 		  }

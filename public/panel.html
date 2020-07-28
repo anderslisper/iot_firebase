@@ -47,13 +47,16 @@
 		<button type="button" style='width:100%' onclick='saveSetPoint(21)'>21&deg;C</button>
 		<button type="button" style='width:100%' onclick='saveSetPoint(121)'>&#10052; 21&deg;C</button>
     <hr>
-		Desired: <span id='desired'>...</span><br>
-		Reported: <span id='reported'>...</span><br>
+    <span style="font-size:50px">    
+		Desired: <span id='desired'>...</span>&deg;C 
+		Reported: <span id='reported'>...</span>&deg;C
+    </span>
 	<hr>
     <br>
-    <a id="portal" href="index.html">Device portal</a>
-    <br>
+    <span style="font-size:50px">    
+    <a id="portal" href="index.html">Device portal</a><br>
     <a id="administration" href="device_admin.html">Device administration</a>
+    </span>    
     <script>
     loadDevices();
     </script>
